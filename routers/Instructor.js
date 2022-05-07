@@ -7,12 +7,14 @@ const {
   getAllSubjects,
   markAttendence,
   uploadMarks,
+  findSectionByID,
 } = require("../controler/InstructorController");
 
 Router.post("/login", instructorLogin);
 Router.post("/fetchStudents", fetchStudents);
 Router.post("/markAttendence", markAttendence);
 Router.get("/getAllSubjects", getAllSubjects);
+Router.get("/findSectionByID", findSectionByID);
 Router.post("/uploadMarks", uploadMarks);
 
 module.exports = Router;

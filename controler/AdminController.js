@@ -6,7 +6,9 @@ const validateStudent = require("../validation/student_regester");
 const validateAdminLogin = require("../validation/adminLogin");
 const validateInstructor = require("../validation/instructorRegister");
 const validateSubject = require("../validation/subjectRegister");
-
+const validateAdminregerter = require("../validation/addingAdminValidation");
+const validateInstructorDepart = require("../validation/getInstructorByDepart");
+const validateStudentDepartYear = require("../validation/getStudentbydepartYear");
 ///////////////////////////// models //////////////////////////////////
 const Admins = require("../models/Admins");
 const Students = require("../models/Students");
@@ -18,14 +20,13 @@ module.exports = {
   ///////////////////////////   ADD   ADMIN    //////////////////////////////////////////////////////
   addAdmin: async (req, res) => {
     try {
-      const { name, ssid_Hash, department, password_hash } = req.body;
+      const { name, password_hash, ssid_Hash, department } = req.body;
+      const { errors, isValid } = validateAdminregerter(req.body);
 
-      if (!name || !ssid_Hash || !password_hash || !department) {
-        return res.status(400).json({
-          success: false,
-          message: "Probably you have missed certain fields",
-        });
+      if (!isValid) {
+        return res.status(400).json(errors);
       }
+
       const admin = await Admins.findOne({ ssid_Hash });
       if (admin) {
         return res
@@ -34,10 +35,10 @@ module.exports = {
       }
 
       const newAdmin = await new Admins({
-        name: req.body.name,
-        ssid_Hash: req.body.ssid_Hash,
-        department: req.body.department,
-        password_hash: bcrypt.hashSync(req.body.password_hash),
+        name,
+        password_hash: bcrypt.hashSync(password_hash),
+        department,
+        ssid_Hash,
       });
       await newAdmin.save();
       return res.status(200).json({
@@ -45,27 +46,26 @@ module.exports = {
         message: "Admin registerd successfully",
         response: newAdmin,
       });
-    } catch (err) {
+    } catch (error) {
       return res.status(400).json({ success: false, message: error.message });
     }
   },
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////   GET ALL STUDENTS   /////////////////////////////////////////////////
-
-  getAllStudents: async (req, res) => {
+  ////////////////////////////Get All Admins///////////////////////////////////////////////////////////
+  getAllAdmins: async (req, res) => {
     try {
-      const student = await Students.find({});
-      if (student.length === 0) {
-        return res.status(404).json({ message: "No students found" });
+      const Admin = await Admins.find().select("-password_hash");
+      if (Admin.length === 0) {
+        return res.status(404).json({ message: "No Admins found" });
       }
-      res.status(200).json({ result: student });
+      res.status(200).json({ result: Admin });
     } catch (err) {
       res
         .status(400)
-        .json({ message: `error in getting all student", ${err.message}` });
+        .json({ message: `error in getting all Admins", ${err.message}` });
     }
   },
-  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////
   /////////////////////////// ADMIN LOGIN   //////////////////////////////////////////////////////
 
   adminLogin: async (req, res) => {
@@ -124,16 +124,19 @@ module.exports = {
         phone,
         address,
         department,
-        GPA,
-        elsho3ba,
-        sex,
+        division,
+        preference,
+        gender,
         code_Hash,
         ssid_Hash,
         section,
       } = req.body;
-      const student = await Students.findOne({ ssid_Hash });
+      const student = await Students.findOne({
+        ssid_Hash,
+      });
       if (student) {
         errors.ssid_Hash = "ssid_Hash already exist";
+
         return res.status(400).json(errors);
       }
 
@@ -144,20 +147,20 @@ module.exports = {
         phone,
         address,
         department,
-        GPA,
-        elsho3ba,
-        sex,
+        division,
+        preference,
+        gender,
         code_Hash,
         ssid_Hash,
         section,
       });
       await newStudent.save();
-      // const subjectts = await subjects.find({ year });
-      // if (subjectts.length !== 0) {
-      //   for (var i = 0; i < subjectts.length; i++) {
-      //     newStudent.subjects.push(subjectts[i]._id);
-      //   }
-      // }
+      const subjects = await Subjects.find({ year });
+      if (subjects.length !== 0) {
+        for (var i = 0; i < subjects.length; i++) {
+          newStudent.subjects.push(subjects[i]._id);
+        }
+      }
       await newStudent.save();
       res.status(200).json({ result: newStudent });
     } catch (err) {
@@ -167,17 +170,26 @@ module.exports = {
     }
   },
   ////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////   GET ALL STUDENTS   /////////////////////////////////////////////////
+
+  getAllStudents: async (req, res) => {
+    try {
+      const student = await Students.find({});
+      if (student.length === 0) {
+        return res.status(404).json({ message: "No students found" });
+      }
+      res.status(200).json({ result: student });
+    } catch (err) {
+      res
+        .status(400)
+        .json({ message: `error in getting all student", ${err.message}` });
+    }
+  },
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////// add Instructor //////////////////////////////////////////////////
   addInstructor: async (req, res) => {
     try {
-      const {
-        name,
-        password,
-        gender,
-        department,
-        ssid_Hash,
-        subjectsCanTeach,
-      } = req.body;
+      const { name, password, gender, department, ssid_Hash } = req.body;
       const { errors, isValid } = validateInstructor(req.body);
 
       if (!isValid) {
@@ -197,7 +209,6 @@ module.exports = {
         gender,
         department,
         ssid_Hash,
-        subjectsCanTeach,
       });
       await newInstructor.save();
       return res.status(200).json({
@@ -247,7 +258,6 @@ module.exports = {
         subjectName,
         year,
       });
-      await newSubject.save();
       const students = await Students.find({ department, year });
       if (students.length === 0) {
         errors.department = "No branch found for given subject";
@@ -259,6 +269,7 @@ module.exports = {
         }
         res.status(200).json({ newSubject });
       }
+      await newSubject.save();
     } catch (err) {
       console.log(`error in adding new subject", ${err.message}`);
     }
@@ -286,18 +297,39 @@ module.exports = {
 
   getAllInstructorDepart: async (req, res, next) => {
     try {
+      const { errors, isValid } = validateInstructorDepart(req.body);
+
+      if (!isValid) {
+        return res.status(400).json(errors);
+      }
       const { department } = req.body;
       const allInstructors = await Instructor.find({ department });
+      if (allInstructors.length == 0) {
+        return res
+          .status(404)
+          .json({ message: "cannot find instructors in this department." });
+      }
       res.status(200).json({ result: allInstructors });
     } catch (err) {
       console.log("Error in gettting all Instructor", err.message);
     }
   },
   ////////////////////////////////////////////////////////////////////////////////////////
-  getAllStudent: async (req, res, next) => {
+  getAllStudentbyDandY: async (req, res, next) => {
     try {
+      const { errors, isValid } = validateStudentDepartYear(req.body);
+
+      if (!isValid) {
+        return res.status(400).json(errors);
+      }
       const { department, year } = req.body;
       const allStudents = await Students.find({ department, year });
+      if (allStudents.length == 0) {
+        return res.status(404).json({
+          message:
+            "cannot find a student in this department and this year together.",
+        });
+      }
       res.status(200).json({ result: allStudents });
     } catch (err) {
       console.log("Error in gettting all students", err.message);
@@ -309,6 +341,12 @@ module.exports = {
     try {
       const { department, year } = req.body;
       const allSubjects = await Subjects.find({ department, year });
+      if (allSubjects.length == 0) {
+        return res.status(404).json({
+          message:
+            "cannot find a subject in this department and this year together.",
+        });
+      }
       res.status(200).json({ result: allSubjects });
     } catch (err) {
       console.log("Error in gettting all students", err.message);

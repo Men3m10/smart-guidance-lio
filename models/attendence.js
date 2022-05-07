@@ -1,22 +1,23 @@
 const mongoose = require("mongoose");
-const { Schema } = mongoose;
 
-const attendenceSchema = new Schema({
+const attendenceSchema = mongoose.Schema({
   student: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Students",
   },
   subject: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Subjects",
   },
   totalLecturesByinstructor: {
     type: Number,
     default: 0,
+    trim: true,
   },
   lectureAttended: {
     type: Number,
     default: 0,
+    trim: true,
   },
 });
 

@@ -199,6 +199,7 @@ const {
   getStudentSSID,
   getAllSubjects,
   getMarks,
+  checkAttendence,
 } = require("../controler/studentController");
 
 Router.post("/studentLogin", studentLogin);
@@ -207,5 +208,6 @@ Router.post("/getStudentByName", getStudentByName);
 Router.post("/getStudentSSID", getStudentSSID);
 Router.get("/getAllSubjects", getAllSubjects);
 Router.get("/getMarks", getMarks);
+Router.get("/checkAttendence", checkAttendence);
 
 module.exports = Router;

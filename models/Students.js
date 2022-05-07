@@ -1,24 +1,25 @@
 const mongoose = require("mongoose");
 
 const studentsSchema = mongoose.Schema({
-  name: { type: String, required: true },
-  year: { type: String, required: true },
-  uni_email: { type: String, required: true },
-  phone: { type: String, required: true },
-  address: { type: String, default: "" },
-  department: { type: String, required: true },
-  GPA: { type: Number, required: true },
-  elsho3ba: { type: String, default: "" },
-  sex: { type: String, required: true },
-  code_Hash: { type: String, required: true },
-  ssid_Hash: { type: String, required: true },
+  name: { type: String, required: true, trim: true },
+  year: { type: String, required: true, trim: true },
+  uni_email: { type: String, required: true, unique: true, trim: true },
+  phone: { type: String, required: true, trim: true },
+  address: { type: String, default: "", trim: true },
+  department: { type: String, required: true, trim: true, uppercase: true },
+  division: { type: String, default: "", trim: true },
+  preference: { type: String, default: "", trim: true },
+  gender: { type: String, required: true, trim: true },
+  code_Hash: { type: String, required: true, unique: true, trim: true },
+  ssid_Hash: { type: String, required: true, unique: true, trim: true },
   subjects: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Subjects",
+      trim: true,
     },
   ],
-  section: { type: String, required: true },
+  section: { type: String, required: true, trim: true },
 });
 
 //exports.Students = mongoose.model("Students", studentsSchema);

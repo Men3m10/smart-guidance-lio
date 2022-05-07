@@ -15,6 +15,9 @@ const Attendence = require("../models/attendence");
 const validateInstructorLogin = require("../validation/instructorLogin");
 const validateFetchStudentsInput = require("../validation/instructorFetchStudents");
 const validateFacultyUploadMarks = require("../validation/instructorUploadMarkes");
+const validateFacultyUpdatePassword = require("../validation/instructorUpdatePass");
+const validateStudentSectionbySSID = require("../validation/getSectionBySSIDvalidation");
+const validateAttendence = require("../validation/validationAttendence");
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 module.exports = {
@@ -86,21 +89,38 @@ module.exports = {
       console.log("error in instructor fetchStudents", err.message);
     }
   },
+  ///////////////////////////////////////////////////////////////////
+  findSectionByID: async (req, res) => {
+    try {
+      const { errors, isValid } = validateStudentSectionbySSID(req.body);
+      if (!isValid) {
+        return res.status(400).json(errors);
+      }
+      const { ssid_Hash } = req.body;
+      const studentInfo = await Student.findOne({ ssid_Hash }).select(
+        "section name -_id"
+      );
+      if (!studentInfo) {
+        return res.status(404).json({ message: "no data" });
+      }
+      res.status(200).json({ studentInfo });
+    } catch (error) {
+      console.log("error in instructor findSectionByID", error.message);
+    }
+  },
+  ////////////////////////////////////////////////////////////////////////////////////////////////
   markAttendence: async (req, res, next) => {
     try {
       const { selectedStudents, subjectCode, department, year, section } =
         req.body;
-
       const sub = await Subject.findOne({ subjectCode });
-
       //All Students
       const allStudents = await Student.find({ department, year, section });
-
-      var filteredArr = allStudents.filter(function (item) {
+      var filteredArr = allStudents.filter((item) => {
         return selectedStudents.indexOf(item.id) === -1;
       });
-
-      //Attendence mark
+      //console.log(filteredArr.length);
+      // Attendence mark
       for (let i = 0; i < filteredArr.length; i++) {
         const pre = await Attendence.findOne({
           student: filteredArr[i]._id,
@@ -111,10 +131,10 @@ module.exports = {
             student: filteredArr[i],
             subject: sub._id,
           });
-          attendence.totalLecturesByFaculty += 1;
+          attendence.totalLecturesByinstructor += 1;
           await attendence.save();
         } else {
-          pre.totalLecturesByFaculty += 1;
+          pre.totalLecturesByinstructor += 1;
           await pre.save();
         }
       }
@@ -128,23 +148,24 @@ module.exports = {
             student: selectedStudents[a],
             subject: sub._id,
           });
-          attendence.totalLecturesByFaculty += 1;
+          attendence.totalLecturesByinstructor += 1;
           attendence.lectureAttended += 1;
           await attendence.save();
         } else {
-          pre.totalLecturesByFaculty += 1;
+          pre.totalLecturesByinstructor += 1;
           pre.lectureAttended += 1;
           await pre.save();
         }
       }
-      res.status(200).json({ message: "done" });
+      res.status(200).json({ result: filteredArr });
     } catch (err) {
       console.log("error", err.message);
       return res
         .status(400)
-        .json({ message: `Error in marking attendence${err.message}` });
+        .json({ message: `Error in marking attendence  ${err.message}` });
     }
   },
+  //////////////////////////////////////////////////////////////
   getAllSubjects: async (req, res, next) => {
     try {
       const allSubjects = await Subject.find({});
@@ -160,6 +181,7 @@ module.exports = {
         .json({ message: `error in getting all Subjects", ${err.message}` });
     }
   },
+  ///////////////////////////////////////////////////////////////////////////////////////
   uploadMarks: async (req, res, next) => {
     try {
       const { errors, isValid } = validateFacultyUploadMarks(req.body);
@@ -169,6 +191,7 @@ module.exports = {
         return res.status(400).json(errors);
       }
       const {
+        student,
         subjectCode,
         exam,
         totalMarks,
@@ -177,29 +200,32 @@ module.exports = {
         year,
         section,
       } = req.body;
-      const subject = await Subject.findOne({ subjectCode });
+      const subjectid = await Subject.findOne({ subjectCode });
+      const subject = subjectid._id;
       const isAlready = await Mark.find({
+        student,
         exam,
         department,
         section,
-        subjectCode: subject._id,
+        subject,
       });
+
       if (isAlready.length !== 0) {
         errors.exam = "You have already uploaded marks of given exam";
         return res.status(400).json(errors);
       }
-      for (var i = 0; i < marks.length; i++) {
-        const newMarks = await new Mark({
-          student: marks[i]._id,
-          subject: subject._id,
-          exam,
-          department,
-          section,
-          marks: marks[i].value,
-          totalMarks,
-        });
-        await newMarks.save();
-      }
+
+      const newMarks = await new Mark({
+        student,
+        subject,
+        exam,
+        department,
+        section,
+        marks,
+        totalMarks,
+      });
+      console.log(newMarks);
+      await newMarks.save();
       res.status(200).json({ message: "Marks uploaded successfully" });
     } catch (err) {
       console.log("Error in uploading marks", err.message);

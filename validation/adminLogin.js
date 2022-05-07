@@ -18,6 +18,10 @@ const validateAdminLogin = (data) => {
     errors.password_hash = "Password field is required";
   }
 
+  if (!Validator.isLength(data.password_hash, { min: 8, max: 30 })) {
+    errors.password_hash = "Password must contain at least 8 character";
+  }
+
   return {
     errors,
     isValid: isEmpty(errors),

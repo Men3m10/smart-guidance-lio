@@ -95,8 +95,9 @@ const {
   getAllInstructorDepart,
   addSubject,
   getAllSubjects,
-  getAllStudent,
+  getAllStudentbyDandY,
   getAllSubject,
+  getAllAdmins,
 } = require("../controler/AdminController");
 
 Router.post("/addAdmin", addAdmin);
@@ -105,10 +106,11 @@ Router.post("/addstd", addStudent);
 Router.post("/addinst", addInstructor);
 Router.post("/addsub", addSubject);
 Router.get("/getAllInst", getAllInstructor);
-Router.get("/getInstructors", getAllInstructorDepart);
+Router.get("/getInstructorDepart", getAllInstructorDepart);
 Router.get("/getStudents", getAllStudents);
 Router.get("/getSubjects", getAllSubjects);
-Router.get("/getAllStudent", getAllStudent);
+Router.get("/getAllStudentDepartYear", getAllStudentbyDandY);
 Router.get("/getAllSubject", getAllSubject);
+Router.get("/getAllAdmins", getAllAdmins);
 
 module.exports = Router;

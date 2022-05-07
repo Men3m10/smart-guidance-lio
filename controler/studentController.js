@@ -40,6 +40,35 @@ module.exports = {
       });
     });
   },
+  checkAttendence: async (req, res, next) => {
+    try {
+      const { studentId } = req.body;
+      const attendence = await Attendence.find({ student: studentId }).populate(
+        "subject"
+      );
+      if (!attendence) {
+        res.status(400).json({ message: "Attendence not found" });
+      }
+      res.status(200).json({
+        result: attendence.map((att) => {
+          let res = {};
+          res.attendence = (
+            (att.lectureAttended / att.totalLecturesByinstructor) *
+            100
+          ).toFixed(2);
+          res.subjectCode = att.subject.subjectCode;
+          res.subjectName = att.subject.subjectName;
+          res.maxHours = att.subject.totalLectures;
+          res.absentHours = att.totalLecturesByinstructor - att.lectureAttended;
+          res.lectureAttended = att.lectureAttended;
+          res.totalLecturesByinstructor = att.totalLecturesByinstructor;
+          return res;
+        }),
+      });
+    } catch (err) {
+      console.log("Error in fetching attendence", err.message);
+    }
+  },
   getAllStudents: async (req, res, next) => {
     try {
       const { department, year, section } = req.body;
@@ -78,7 +107,7 @@ module.exports = {
   },
   getAllSubjects: async (req, res, next) => {
     try {
-      const { department, year } = req.user;
+      const { department, year } = req.body;
       const subjects = await Subject.find({ department, year });
       if (subjects.length === 0) {
         return res.status(404).json({ message: "No subjects founds" });
@@ -92,10 +121,9 @@ module.exports = {
   },
   getMarks: async (req, res, next) => {
     try {
-      console.log("req.user", req.user);
-      const { department, year, id } = req.user;
+      const { department, year, id } = req.body;
       const getMarks = await Mark.find({ department, student: id }).populate(
-        "Subjects"
+        "subject"
       );
       console.log("getMarks", getMarks);
 

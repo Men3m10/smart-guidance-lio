@@ -5,7 +5,6 @@ const validateFacultyUploadMarks = (data) => {
   let errors = {};
   data.subjectCode = !isEmpty(data.subjectCode) ? data.subjectCode : "";
   data.exam = !isEmpty(data.exam) ? data.exam : "";
-  data.marks = !isEmpty(data.marks) ? data.marks : "";
   data.totalMarks = !isEmpty(data.totalMarks) ? data.totalMarks : "";
 
   if (Validator.isEmpty(data.subjectCode)) {
@@ -14,10 +13,6 @@ const validateFacultyUploadMarks = (data) => {
 
   if (Validator.isEmpty(data.exam)) {
     errors.exam = "Exam field is required";
-  }
-
-  if (Validator.isEmpty(data.marks)) {
-    errors.marks = "marks field is required";
   }
 
   if (Validator.isEmpty(data.totalMarks)) {

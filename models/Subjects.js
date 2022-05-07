@@ -4,10 +4,13 @@ const Subjectsschema = mongoose.Schema({
   department: {
     type: String,
     required: true,
+    trim: true,
+    uppercase: true,
   },
   subjectCode: {
     type: String,
     required: true,
+    trim: true,
   },
   subjectName: {
     type: String,
@@ -17,14 +20,17 @@ const Subjectsschema = mongoose.Schema({
   totalLectures: {
     type: Number,
     default: 12,
+    trim: true,
   },
   year: {
     type: String,
     required: true,
+    trim: true,
   },
   attendence: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "attendence",
+    trim: true,
   },
 });
 

@@ -5,31 +5,40 @@ const markSchema = new Schema({
   student: {
     type: Schema.Types.ObjectId,
     ref: "Students",
+    trim: true,
   },
   subject: {
     type: Schema.Types.ObjectId,
     ref: "Subjects",
+    trim: true,
   },
   exam: {
     type: String,
     required: true,
+    trim: true,
   },
   marks: {
     type: Number,
     default: 0,
+    trim: true,
   },
   totalMarks: {
     type: Number,
     default: 100,
+    trim: true,
   },
   department: {
     type: String,
+    trim: true,
+    uppercase: true,
   },
-  semester: {
+  year: {
     type: Number,
+    trim: true,
   },
   section: {
     type: String,
+    trim: true,
   },
 });
 
